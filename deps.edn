@@ -1,0 +1,11 @@
+;; The CLI starts no JVM. This file exists so `clj -M:lint` has somewhere to
+;; live and so the repo declares its (empty) production dependency set out
+;; loud: `bin/itonami` runs under nbb and requires nothing from npm or maven.
+;;
+;; If a dependency ever appears in :deps, the claim in README.md that this
+;; front end has no runtime dependencies has stopped being true.
+{:paths ["src" "bin" "resources"]
+ :deps {org.clojure/clojure {:mvn/version "1.12.0"}}
+ :aliases
+ {:lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2024.11.14"}}
+         :main-opts ["-m" "clj-kondo.main" "--lint" "src" "bin"]}}}

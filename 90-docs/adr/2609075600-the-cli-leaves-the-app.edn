@@ -1,0 +1,95 @@
+[{:db/id -1
+  :adr/id "adr-2609075600-the-cli-leaves-the-app"
+  :adr/title "The CLI leaves the app, and the pinned surface gets a checker that refuses"
+  :adr/status "accepted"
+  :adr/date "2026-09-07"
+  :adr/related "adr-2609075400-the-shape-of-a-five-repository-split"
+  :adr/body "## What was asked
+
+cloud-itonami-app / -cli / -api / -apex に整理してほしい、-auth も分離。
+
+This ADR lands the first of those four. Nothing is deleted from the app yet.
+
+## The seam, measured twice
+
+My first measurement (adr-2609075400) said `-cli` was clean because
+`commands.cljc` and `repo_profile.cljc` require nothing from the app. That is
+true and it is the wrong half of the question. What decides whether they can
+move is who requires THEM, and I had not looked.
+
+Looking:
+
+    cloud.itonami.app.repo-profile   required by: bin/itonami, its own test
+    cloud.itonami.app.commands       required by: bin/itonami, tests, cli.clj
+
+So `commands` had one app-side consumer, and that consumer decides the
+dependency direction between two of the four repositories. If `cli.clj` is a
+live front end, moving `commands` makes the app depend on the CLI, which is
+backwards; leaving it makes the CLI depend on an app checkout at runtime,
+which is the coupling the split exists to end.
+
+`cli.clj` is neither. There is no `:cli` alias in `deps.edn` -- the file's own
+comment at line 591 says a test goes red \"the day :cli is reintroduced\". It is
+tested but has no launcher. PR #270 removed `:server`, `:mcp` and `:cli` and
+left `bin/itonami` refusing every command; `bin/itonami` is what replaced it.
+
+So the CLI's namespaces have no live app-side consumer, and they move as a
+unit. The question that looked like a design fork was a measurement I had not
+taken.
+
+## What moved
+
+    bin/itonami + 6 modules   editor, harness, profile, skills, splash, text
+    commands.cljc             what a command is
+    repo_profile.cljc         which bot a repository selects
+    5 nbb suites              editor 63/206, harness 16/41, skills 11/36,
+                              splash 17/55, client 9 checks
+    3 resources               pinned, see below
+
+Proven standalone before anything else: `./bin/itonami --print-data-dir`
+resolves to the CLI repository, and `./bin/itonami status` answers the live
+resident (409 routes, 209 commands, store 5a6c4a52). It reads no file from the
+app tree.
+
+## The three pinned files, and the gate they need
+
+`commands.edn` is derived from the app's route table by the app's `route-scan`
+and checked by the app's own test. `cli-aliases.edn` and `defaults.edn` are
+the app's too. The CLI pins copies so it runs without an app checkout beside
+it -- and a pinned copy of a generated file is exactly the thing that drifts.
+
+`scripts/verify-pinned-surface.cljs` answers with three outcomes: 0 identical,
+1 drift (naming the file and both digests), 2 REFUSED when no app checkout was
+found. The third is the point -- nothing was compared, so it is not a pass.
+
+The first version of that function did not discriminate. It built a candidate
+list and took the first path that existed, so `--app /nonexistent` fell
+through to the sibling default and returned exit 0: a wrong path reported as a
+match. The control written to prove REFUSED works is what caught it. An
+explicitly named directory is now authoritative; only the implicit sibling is
+allowed to be absent.
+
+Controls, all run: clean 0 · perturbed alias file 1, named · `--app
+/nonexistent` 2 · `CLOUD_ITONAMI_APP_DIR=/nonexistent` 2 · clean again 0.
+
+## What has NOT happened
+
+- Nothing is deleted from `cloud-itonami-app`. Both trees carry the CLI, both
+  suites pass, and `~/.local/bin/itonami` still resolves through
+  `~/.cloud-itonami/current`. Removing the app's copy means repointing that
+  launcher, and it is a separate change so there is never a moment when
+  nothing works.
+- `-api`, `-apex` and `-auth` are not started. `-apex` is next and is
+  separable today (five Workers with their own wrangler configs). `-auth`
+  needs a decision about what the app asks it FOR, and `-api` needs
+  `server.clj` split into routes and handlers first -- a refactor inside the
+  current repo that does not need a repository to begin.
+
+## Why a repository at all
+
+The honest answer is not \"the app is too big\". It is that these two things
+have different release cadences and different reasons to change: the client
+changes when the terminal experience changes, and the server changes when the
+routes change. The registry is the contract between them, and until today that
+contract was implicit in a shared directory. Now it is three files with a
+digest and a checker that refuses to guess."}]
