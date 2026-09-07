@@ -26,7 +26,14 @@
 (def pinned
   ["cloud-itonami-app.commands.edn"
    "cloud-itonami-app.cli-aliases.edn"
-   "cloud-itonami-app.defaults.edn"])
+   "cloud-itonami-app.defaults.edn"
+   ;; Added 2026-09-07, after the splash rendered "vunknown" from this
+   ;; repository. `bin/itonami` reads the version from this file and says
+   ;; `unknown` out loud rather than guessing — which is right, and which meant
+   ;; the missing file produced a correct-looking screen instead of an error.
+   ;; The split missed it because the other three are named for the tables they
+   ;; carry and this one is not.
+   "cloud-itonami-version.edn"])
 
 (defn- digest [p]
   (when (fs/existsSync p)
