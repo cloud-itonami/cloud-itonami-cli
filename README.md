@@ -68,3 +68,15 @@ measured before anything moved: these namespaces require nothing from the app,
 and the app's only remaining reference to them is `cli.clj` — a front end with
 no alias in `deps.edn`, tested but not launched. See
 `90-docs/adr/2609075600-the-cli-leaves-the-app.edn`.
+
+### Business capital client
+
+`itonami capital help` exposes public `org/repo` balances, Web3 challenge/login,
+unsigned transaction preparation, browser review and receipt confirmation through
+`https://app.itonami.cloud/api/capital`. Use `prepare --data action.json` with the
+API's typed action schema; `open --project org/repo --intent ID` opens the same
+review as the web app. Wallet signatures remain external; the CLI never stores a
+wallet private key or executes a financial transaction. Its session cookie is
+stored in `~/.cloud-itonami/capital-session.json` with owner-only permissions.
+The contracts, transaction validation and ledger belong to
+[cloud-itonami-api](https://github.com/cloud-itonami/cloud-itonami-api).
