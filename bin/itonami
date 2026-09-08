@@ -97,7 +97,8 @@
 ;; shebang. `launcher_test` catches exactly that, and this avoids repeating it.
 (classpath/add-classpath (path/resolve app-directory "src"))
 (classpath/add-classpath (path/resolve app-directory "bin"))
-(require '[cloud.itonami.app.commands :as commands]
+(require '[cloud.itonami.capital-cli :as capital]
+         '[cloud.itonami.app.commands :as commands]
          '[cloud.itonami.app.repo-profile :as repo-profile]
          '[itonami-harness :as harness]
          '[itonami-profile :as profile]
@@ -2463,6 +2464,9 @@
         json? (true? (:json flags))
         named (commands/words argv)]
     (cond
+      (= "capital" (first named))
+      (-> (capital/run! (rest argv)) (.then #(emit! % true)) (.catch #(cannot-answer! (.-message %) nil)))
+
       (= "--dump-config" (first argv))
       (dump-config!)
 
