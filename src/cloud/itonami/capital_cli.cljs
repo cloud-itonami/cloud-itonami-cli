@@ -1,5 +1,5 @@
 (ns cloud.itonami.capital-cli
- (:require ["node:fs" :as fs] ["node:path" :as path] ["node:os" :as os] ["node:child_process" :as cp] [clojure.string :as str]))
+ (:require ["node:fs" :as fs] ["node:path" :as path] ["node:os" :as os] ["node:child_process" :as cp] [kotoba.lang.text :as str]))
 (def origin "https://app.itonami.cloud")
 (defn session-path [] (path/join (os/homedir) ".cloud-itonami" "capital-session.json"))
 (defn read-session []
