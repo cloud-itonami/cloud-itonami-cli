@@ -44,7 +44,7 @@ checkout beside it. A pinned copy of a *generated* file is the thing that
 drifts, so:
 
 ```bash
-nbb scripts/verify-pinned-surface.cljs        # 0 match · 1 drift · 2 refused
+kbb --backend sci scripts/verify-pinned-surface.cljk        # 0 match · 1 drift · 2 refused
 ```
 
 Three outcomes, not two. Exit 2 means the app checkout was not found and
@@ -55,7 +55,7 @@ input and stays quiet reports a pass for every future drift.
 
 ```bash
 for t in editor harness skills splash client; do
-  nbb --classpath "bin:src:test:resources" test/itonami_${t}_nbb.cljs
+  kbb --backend sci --classpath "bin:src:test:resources" test/itonami_${t}_nbb.cljs
 done
 ```
 
