@@ -1,4 +1,4 @@
-#!/usr/bin/env nbb
+#!/usr/bin/env kbb
 ;; The three files this CLI pins are produced by cloud-itonami-app, not here.
 ;;
 ;; `resources/cloud-itonami-app.commands.edn` is derived from that app's own

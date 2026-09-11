@@ -1,4 +1,4 @@
-;; The CLI starts no JVM. This file exists so `clj -M:lint` has somewhere to
+;; The CLI starts no JVM. This file exists so `kbb -M:lint` has somewhere to
 ;; live and so the repo declares its (empty) production dependency set out
 ;; loud: `bin/itonami` runs under nbb and requires nothing from npm or maven.
 ;;
