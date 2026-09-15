@@ -46,23 +46,12 @@
   (fs/realpathSync (path/resolve (path/dirname *file*) "..")))
 
 (classpath/add-classpath (path/resolve app-directory "src"))
-(require '[cloud.itonami.app.commands :as commands])
-
-;; The tables are cloud-itonami-commands' (nbb.edn :deps), extracted by the
-;; engine onto its classpath -- read them from there, as bin/itonami does. A
-;; table that is not on the classpath is a failure to measure (exit 2), not
-;; a failed check: nothing was compared.
-(defn- classpath-file [n]
-  (some (fn [dir] (let [p (path/resolve dir n)] (when (and (seq dir) (fs/existsSync p)) p)))
-        (str/split (classpath/get-classpath) (re-pattern path/delimiter))))
-
-(commands/install-sources!
- (into {} (map (fn [n]
-                 (if-let [p (classpath-file n)]
-                   [n (fs/readFileSync p "utf8")]
-                   (do (js/console.error (str "CANNOT MEASURE: " n " is on no classpath entry (is cloud-itonami-commands in nbb.edn :deps?)"))
-                       (js/process.exit 2)))))
-       [commands/resource-name commands/alias-resource-name]))
+;; `commands` is the Kotoba component (cloud-itonami-commands dist/commands.wasm)
+;; through its guest adapter -- what bin/itonami runs since 2026-09-15. It is
+;; instantiated asynchronously, so the checks run after `load!` at the bottom
+;; of this file; a component that cannot be loaded is a failure to measure
+;; (exit 2), not a failed check.
+(require '[cloud.itonami.commands.guest :as commands])
 
 (def argv (vec (drop 3 (js->clj js/process.argv))))
 (def probe? (some? (some #{"--probe"} argv)))
@@ -206,7 +195,12 @@
                 " FAILED " (count (remove true? @results))))
   (js/process.exit (if (every? true? @results) 0 1)))
 
-(resolution-checks)
-(if probe?
-  (-> (probe!) (.then finish))
-  (finish))
+(-> (commands/load!)
+    (.then (fn [_]
+             (resolution-checks)
+             (if probe?
+               (-> (probe!) (.then finish))
+               (finish))))
+    (.catch (fn [e]
+              (js/console.error (str "CANNOT MEASURE: kotoba component did not load: " (or (ex-message e) (str e))))
+              (js/process.exit 2))))

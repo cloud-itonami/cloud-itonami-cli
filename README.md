@@ -34,25 +34,36 @@ before.
 ## What lives here, and what does not
 
 This repository holds the **client**: the REPL and its editor, the splash, the
-slash-command registry, panels, skills discovery, terminal width measurement,
-and the two namespaces that decide what a command *is*
-(`cloud.itonami.app.commands`, `cloud.itonami.app.repo-profile`).
+slash-command registry, panels, skills discovery, terminal width measurement.
+The two deciders — what a command *is*, what a repository's profile may say —
+are not Clojure here at all: they are the Kotoba components of
+cloud-itonami-commands (`dist/commands.wasm`, `dist/repo_profile.wasm`),
+reached through their guest adapters.
+
+`bin/itonami` is a launcher: it answers `--print-data-dir` from its own file,
+instantiates both components (asynchronous — the wasm is hashed on load), and
+only then loads `bin/itonami_main.cljk`, the front end proper, whose layers
+read the repository's `:cli/config` through the profile component at mount.
 
 It does not hold the server. `itonami` resolves a command to a method and a
 path, carries the session, and prints what the server said — so it works
 against whichever server is bound on the configured host and port.
 
-## The command tables are a dependency, not a copy
+## The command surface is a dependency, and it is Kotoba
 
-`cloud.itonami.app.commands`, `cloud.itonami.app.repo-profile` and the
-three tables they read (`commands.edn`, `cli-aliases.edn`, `defaults.edn`)
-are [cloud-itonami-commands](https://github.com/cloud-itonami/cloud-itonami-commands),
+`cloud.itonami.commands.guest` and `cloud.itonami.repo-profile.guest` are
+[cloud-itonami-commands](https://github.com/cloud-itonami/cloud-itonami-commands),
 pinned by sha in `nbb.edn` (and, for the linter, `deps.edn`). The engine
-extracts that dependency onto its classpath and `bin/itonami` reads the
-tables from there. Until 2026-09-15 this repository carried copies and a
-drift checker; measured that day, three of the four copies had drifted. A
-copy with a checker is still a copy. When the app regenerates the registry,
-the sha here advances — that is the whole update.
+extracts that dependency onto its classpath; with it come `commands.wasm`,
+`repo_profile.wasm` and the amu host that runs them, and `defaults.edn`,
+which this launcher still reads as a file. The adapters answer the same
+names the Clojure namespaces `cloud.itonami.app.commands` / `.repo-profile`
+did (same values, same throws — that repository's parity harness holds them
+to it, 588 checks), so the cutover on 2026-09-15 changed one `require`.
+Until that day this repository carried copies of the tables and a drift
+checker; measured that morning, three of the four copies had drifted. When
+the app regenerates the registry, the sha here advances — that is the whole
+update.
 
 One pinned file remains, `resources/cloud-itonami-version.edn` (the app's
 version, which the splash names), and the checker still guards it:
