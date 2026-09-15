@@ -10,4 +10,4 @@
         ;; The command surface: cloud.itonami.app.commands / .repo-profile and
         ;; the three tables. Advance this sha when the app regenerates the
         ;; registry (cloud-itonami-commands README, "Who writes the registry").
-        io.github.cloud-itonami/cloud-itonami-commands {:git/sha "ae09ab0b19ce3e34adf974e7a2b0f67c7d578037"}}}
+        io.github.cloud-itonami/cloud-itonami-commands {:git/sha "e6ce98e94908b002afe077aa7f83f9bbcf7b5281"}}}
