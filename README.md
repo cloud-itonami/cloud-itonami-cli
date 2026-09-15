@@ -14,11 +14,22 @@ itonami auth login --label cli
 
 ## It starts no JVM, and installs nothing
 
-`bin/itonami` runs under [nbb](https://github.com/babashka/nbb). There is no
-npm dependency, no maven dependency, and no build step: the file you read is
-the file that runs. `deps.edn` exists for the linter and to make the empty
-production dependency set visible — if something appears in `:deps`, the claim
-in this paragraph has stopped being true.
+`bin/itonami` is a `#!/usr/bin/env kbb` launcher: it runs on the kbb engine
+(kotoba-lang/org-babashka-nbb, SCI on Node). There is no npm dependency and
+no build step: the file you read is the file that runs. Its one library,
+`kotoba.lang.text`, is declared in `nbb.edn` — the file the engine actually
+reads — with the same sha `deps.edn` pins for the linter. If a second
+coordinate ever appears in either file, this paragraph has stopped being true.
+One caveat, measured 2026-09-15: the engine resolves `nbb.edn` `:deps` by
+shelling out to `bb` once into `.nbb/` — a cold cache with no `bb` on PATH
+exits 1 (`bb: command not found`). After that first resolution `bb` is not
+consulted again.
+
+Source is `.cljk` (Clojure-shaped Kotoba; ADR-2609111500). The engine
+resolves `.cljk` and never `.kotoba`, so a `.kotoba` spelling of these files
+cannot be `require`d by the launcher — that is what broke `itonami` between
+2026-09-10 and 2026-09-15, and `cljk-origin.edn` records what each file was
+before.
 
 ## What lives here, and what does not
 
@@ -55,7 +66,7 @@ input and stays quiet reports a pass for every future drift.
 
 ```bash
 for t in editor harness skills splash client; do
-  kbb --backend sci --classpath "bin:src:test:resources" test/itonami_${t}_nbb.cljs
+  kbb --backend sci --classpath "bin:src:test:resources" test/itonami_${t}_nbb.cljk
 done
 ```
 

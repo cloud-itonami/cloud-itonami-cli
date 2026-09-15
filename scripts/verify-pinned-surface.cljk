@@ -21,7 +21,7 @@
             ["node:path" :as path]
             ["node:crypto" :as crypto]))
 
-(def here (path/dirname (path/dirname (js/require.resolve "./verify-pinned-surface.cljs"))))
+(def here (path/dirname (path/dirname (js/require.resolve "./verify-pinned-surface.cljk"))))
 
 (def pinned
   ["cloud-itonami-app.commands.edn"

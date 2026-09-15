@@ -1,0 +1,24 @@
+{:format :kotoba.cljk-origin/v1
+ :renamed-on "2026-09-15"
+ :decision "adr-2609111500-cljk-rename-all-clojure-source (com-junkawasaki/root 90-docs/adr). These files were renamed .cljs/.cljc -> .kotoba on 2026-09-10 (commit 1b8736d, owner instruction of that day) before the workspace settled on .cljk for Clojure-shaped source on 2026-09-11; they carry node interop and run on the kbb engine, which resolves .cljk and never .kotoba, so the CLI could not require its own siblings until this second rename."
+ :rule "value = the extension the file had before the 2026-09-10 rename (from that commit's rename records), i.e. what it would have been renamed FROM had the 2026-09-11 wave reached it."
+ :origins
+ {
+  "bin/itonami_editor.cljk" ".cljs"
+  "bin/itonami_harness.cljk" ".cljs"
+  "bin/itonami_profile.cljk" ".cljs"
+  "bin/itonami_skills.cljk" ".cljs"
+  "bin/itonami_splash.cljk" ".cljs"
+  "bin/itonami_text.cljk" ".cljs"
+  "bin/itonami_wave.cljk" ".cljs"
+  "scripts/verify-pinned-surface.cljk" ".cljs"
+  "src/cloud/itonami/app/commands.cljk" ".cljc"
+  "src/cloud/itonami/app/repo_profile.cljk" ".cljc"
+  "src/cloud/itonami/capital_cli.cljk" ".cljs"
+  "test/capital_session_test.cljk" ".cljs"
+  "test/itonami_client_nbb.cljk" ".cljs"
+  "test/itonami_editor_nbb.cljk" ".cljs"
+  "test/itonami_harness_nbb.cljk" ".cljs"
+  "test/itonami_skills_nbb.cljk" ".cljs"
+  "test/itonami_splash_nbb.cljk" ".cljs"
+  "test/itonami_wave_nbb.cljk" ".cljs"}}
