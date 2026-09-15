@@ -2,3 +2,8 @@ data/
 .cpcache/
 node_modules/
 target*
+# The engine's dependency cache for nbb.edn :deps. Measured 2026-09-15:
+# a cold cache with no `bb` on PATH exits 1 (`bb: command not found` while
+# building nbb-deps.jar) -- the engine shells out to babashka to resolve
+# :deps, so a fresh clone needs bb once, or a warm .nbb/ copied in.
+.nbb/
