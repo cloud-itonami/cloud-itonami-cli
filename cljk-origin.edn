@@ -12,8 +12,6 @@
   "bin/itonami_text.cljk" ".cljs"
   "bin/itonami_wave.cljk" ".cljs"
   "scripts/verify-pinned-surface.cljk" ".cljs"
-  "src/cloud/itonami/app/commands.cljk" ".cljc"
-  "src/cloud/itonami/app/repo_profile.cljk" ".cljc"
   "src/cloud/itonami/capital_cli.cljk" ".cljs"
   "test/capital_session_test.cljk" ".cljs"
   "test/itonami_client_nbb.cljk" ".cljs"

@@ -115,20 +115,32 @@
   (when-let [t (slurp-file p)]
     (try (edn/read-string t) (catch :default _ nil))))
 
+;; The three tables (commands, aliases, defaults) are not this repository's:
+;; they are cloud-itonami/cloud-itonami-commands, pinned by sha in nbb.edn,
+;; which the engine extracts and puts on its classpath. This host reads
+;; files, so it walks the engine's classpath entries for the name -- the
+;; same table the JVM front end reaches with `io/resource`.
+(defn- classpath-file
+  "The first classpath entry that carries `n` as a file, or nil."
+  [n]
+  (some (fn [dir]
+          (let [p (path/resolve dir n)]
+            (when (and (seq dir) (fs/existsSync p)) p)))
+        (str/split (classpath/get-classpath) (re-pattern path/delimiter))))
+
 (def configuration
-  (let [defaults (or (read-edn (path/resolve app-directory "resources"
-                                             "cloud-itonami-app.defaults.edn"))
+  (let [defaults (or (some-> (classpath-file "cloud-itonami-app.defaults.edn") read-edn)
                      {})
         overrides (or (read-edn (path/resolve (data-dir) "config.edn")) {})]
     (merge-with (fn [a b] (if (and (map? a) (map? b)) (merge a b) b))
                 defaults overrides)))
 
-;; The tables ship as resources and this host has no classpath, so it reads
-;; them and hands the text to the namespace that owns every judgement made
-;; from it.
+;; The tables ship in the commands repository and this host reads files, so
+;; it reads them off the classpath and hands the text to the namespace that
+;; owns every judgement made from it.
 (commands/install-sources!
  (into {} (keep (fn [n]
-                  (when-let [t (slurp-file (path/resolve app-directory "resources" n))]
+                  (when-let [t (some-> (classpath-file n) slurp-file)]
                     [n t])))
        [commands/resource-name commands/alias-resource-name]))
 

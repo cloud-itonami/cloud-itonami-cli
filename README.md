@@ -42,25 +42,27 @@ It does not hold the server. `itonami` resolves a command to a method and a
 path, carries the session, and prints what the server said — so it works
 against whichever server is bound on the configured host and port.
 
-## The three pinned files, and why they need a gate
+## The command tables are a dependency, not a copy
 
-`resources/` carries three files this repository does not author:
+`cloud.itonami.app.commands`, `cloud.itonami.app.repo-profile` and the
+three tables they read (`commands.edn`, `cli-aliases.edn`, `defaults.edn`)
+are [cloud-itonami-commands](https://github.com/cloud-itonami/cloud-itonami-commands),
+pinned by sha in `nbb.edn` (and, for the linter, `deps.edn`). The engine
+extracts that dependency onto its classpath and `bin/itonami` reads the
+tables from there. Until 2026-09-15 this repository carried copies and a
+drift checker; measured that day, three of the four copies had drifted. A
+copy with a checker is still a copy. When the app regenerates the registry,
+the sha here advances — that is the whole update.
 
-    cloud-itonami-app.commands.edn      derived from the app's own route table
-    cloud-itonami-app.cli-aliases.edn   the app's alias table
-    cloud-itonami-app.defaults.edn      the app's configuration defaults
-
-They are the app's command surface, pinned here so the CLI runs without an app
-checkout beside it. A pinned copy of a *generated* file is the thing that
-drifts, so:
+One pinned file remains, `resources/cloud-itonami-version.edn` (the app's
+version, which the splash names), and the checker still guards it:
 
 ```bash
 kbb --backend sci scripts/verify-pinned-surface.cljk        # 0 match · 1 drift · 2 refused
 ```
 
 Three outcomes, not two. Exit 2 means the app checkout was not found and
-**nothing was compared** — which is not a pass. A checker that cannot find its
-input and stays quiet reports a pass for every future drift.
+**nothing was compared** — which is not a pass.
 
 ## Tests
 

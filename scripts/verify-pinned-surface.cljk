@@ -1,12 +1,13 @@
 #!/usr/bin/env kbb
-;; The three files this CLI pins are produced by cloud-itonami-app, not here.
+;; The one file this CLI still pins is produced by cloud-itonami-app, not here.
 ;;
-;; `resources/cloud-itonami-app.commands.edn` is derived from that app's own
-;; route table by its `route-scan`; `cli-aliases.edn` and `defaults.edn` are
-;; the app's too. Splitting the front end out of the app made those copies,
-;; and a copy of a generated file is the thing that drifts.
+;; Until 2026-09-15 this also pinned the three command tables. Those are now
+;; cloud-itonami/cloud-itonami-commands, a dependency named by sha in nbb.edn,
+;; so "is the CLI's table current" is the ordinary pin question and no longer
+;; a copy to digest. What remains is `cloud-itonami-version.edn`: the app's
+;; version, which the splash names, and which nothing else here keeps honest.
 ;;
-;; So this answers one question -- are the pinned copies the ones the app
+;; So this answers one question -- is the pinned copy the one the app
 ;; produces today -- with three outcomes rather than two:
 ;;
 ;;   exit 0  identical
@@ -24,10 +25,9 @@
 (def here (path/dirname (path/dirname (js/require.resolve "./verify-pinned-surface.cljk"))))
 
 (def pinned
-  ["cloud-itonami-app.commands.edn"
-   "cloud-itonami-app.cli-aliases.edn"
-   "cloud-itonami-app.defaults.edn"
-   ;; Added 2026-09-07, after the splash rendered "vunknown" from this
+  [;; The three command tables left this list on 2026-09-15 (they are
+   ;; cloud-itonami-commands now). This one stayed:
+   ;; added 2026-09-07, after the splash rendered "vunknown" from this
    ;; repository. `bin/itonami` reads the version from this file and says
    ;; `unknown` out loud rather than guessing — which is right, and which meant
    ;; the missing file produced a correct-looking screen instead of an error.
