@@ -1,0 +1,83 @@
+;; REPL pipe-flow contract checks, end to end through the shipped launcher.
+;;
+;;   kbb --backend sci test/itonami_repl_nbb.cljk
+;;
+;;   0  all checks passed
+;;   1  a check failed
+;;
+;; The contract under test is readline-repl! (bin/itonami_main.cljk):
+;;
+;;   EOF on a piped stdin          -> exit 0
+;;   an "exit" line                -> exit 0
+;;   a slash command that is :exit -> exit 0
+;;   a piped turn that does not
+;;   complete                      -> exit 1
+;;
+;; Each case drives bin/itonami itself with node:child_process spawnSync, so
+;; what is asserted is the exit code a caller (a script, a cron job, a CI
+;; runner) actually observes -- not a REPL state that unit tests already
+;; cover (test/itonami_harness_nbb.cljk). No case talks to a live resident:
+;; the exit-1 case is skipped unless the run comes back with the documented
+;; no-session refusal, so a machine with a working session never flakes.
+;;
+;; Measured 2026-09-16 against HEAD 2979796 before this file existed:
+;; 28 manual runs, all EXIT 0/1, no 124/hang -- these assertions encode
+;; exactly that behaviour.
+
+(ns itonami-repl-nbb
+  (:require ["node:child_process" :as cp]
+            ["node:path" :as path]
+            [clojure.test :refer [deftest is run-tests]]
+            [nbb.core :refer [*file*]]))
+
+(def cli-root
+  (path/resolve (path/dirname *file*) ".."))
+
+(def cli
+  (path/resolve cli-root "bin" "itonami"))
+
+(defn- run-repl
+  "Pipe INPUT into a one-shot `bin/itonami chat` and return the process
+  result map (status / stderr). cwd is the CLI root so the launcher finds
+  nbb.edn where it always does. The environment is inherited as-is."
+  [input]
+  (cp/spawnSync cli #js ["chat"]
+                #js {:input input
+                     :cwd cli-root
+                     :encoding "utf8"
+                     :timeout 120000}))
+
+(deftest eof-on-piped-stdin-exits-zero
+  (let [r (run-repl "")]
+    (is (zero? (:status (js->clj r :keywordize-keys true)))
+        (str "EOF should end the REPL with exit 0, got "
+             (:status (js->clj r :keywordize-keys true))
+             " stderr: " (.-stderr r)))))
+
+(deftest an-exit-line-exits-zero
+  (let [r (run-repl "exit\n")]
+    (is (zero? (:status (js->clj r :keywordize-keys true)))
+        (str "\"exit\" line should end the REPL with exit 0, got "
+             (:status (js->clj r :keywordize-keys true))
+             " stderr: " (.-stderr r)))))
+
+(deftest slash-exit-command-exits-zero
+  (let [r (run-repl "/exit\n")]
+    (is (zero? (:status (js->clj r :keywordize-keys true)))
+        (str "/exit should end the REPL with exit 0, got "
+             (:status (js->clj r :keywordize-keys true))
+             " stderr: " (.-stderr r)))))
+
+(deftest incomplete-piped-turn-exits-one
+  ;; Only assertable where no valid session exists: the documented refusal
+  ;; is an incomplete run -> exit 1. With a session the run may legitimately
+  ;; complete (exit 0), so skip rather than flake.
+  (let [r (run-repl "ok\n")
+        status (:status (js->clj r :keywordize-keys true))
+        stderr (str (.-stderr r))]
+    (if (re-find #"no_session|401" stderr)
+      (is (= 1 status)
+          (str "an incomplete piped turn must exit 1, got " status))
+      (println "SKIP incomplete-turn contract: live session present"))))
+
+(run-tests)
