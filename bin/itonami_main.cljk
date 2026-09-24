@@ -10,7 +10,7 @@
             ["node:os" :as os]
             ["node:fs" :as fs]
             ["node:path" :as path]
-            [clojure.edn :as edn]
+            [kotoba.lang.edn :as edn]
             [clojure.string :as str]
             [nbb.classpath :as classpath]
             [nbb.core :refer [*file*]]))

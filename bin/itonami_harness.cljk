@@ -32,7 +32,7 @@
 
 (ns itonami-harness
   (:require [kotoba.lang.text :as str]
-            [clojure.edn :as edn]
+            [kotoba.lang.edn :as edn]
             ["node:fs" :as fs]
             ["node:path" :as path]
             [nbb.core :refer [*file*]]))
