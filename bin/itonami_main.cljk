@@ -123,7 +123,7 @@
   Upward from the working directory and no further -- the same shape `.git`
   discovery has. There is deliberately no scan: this workspace manages 4,000+
   repositories, and a command that walks them is a command nobody can stop
-  (CLAUDE.md says the same about an argument-less `west update`)."
+  (AGENTS.md says the same about an argument-less `west update`)."
   [dir]
   (loop [d (path/resolve dir) n 0]
     (cond
@@ -1014,7 +1014,7 @@
     (fn [body]
       ;; `/api/agent-bots` answers under `:bots`. This read `:data`, found
       ;; nothing, and printed nothing -- a 200 with a working server and an
-      ;; empty screen, which is the shape CLAUDE.md calls a check that could
+      ;; empty screen, which is the shape AGENTS.md calls a check that could
       ;; not run returning the value of one that ran and passed. Measured
       ;; 2026-09-06 against the live resident: 20+ Bots, zero lines.
       (let [bots (or (:bots body) (:data body))]
@@ -1697,7 +1697,7 @@
   Print the glyph at a known column, ask where the cursor ended up with
   `ESC[6n`, subtract. A terminal that does not answer within the timeout leaves
   the default standing, and says so: an unanswered query must not read as an
-  answer of 1 (CLAUDE.md's second question)."
+  answer of 1 (AGENTS.md's second question)."
   []
   (js/Promise.
    (fn [resolve _]
