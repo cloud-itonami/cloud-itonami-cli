@@ -27,7 +27,7 @@
 ;; With a `:problem` on it, and its directory name as its name. A skill dropped
 ;; for having bad front matter would make "this repository has no skills" and
 ;; "this repository has a skill I could not read" the same screen, which is the
-;; failure CLAUDE.md's second question is about.
+;; failure AGENTS.md's second question is about.
 
 (ns itonami-skills
   (:require [kotoba.lang.text :as str]))

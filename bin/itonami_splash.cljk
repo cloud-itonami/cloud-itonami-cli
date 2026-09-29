@@ -15,7 +15,7 @@
 ;; Every line is read from something: the command tables, the resolved profile
 ;; and its source, the keychain, and one measured `/health`. Nothing is
 ;; asserted that was not looked up. A start screen that says "connected"
-;; without having asked is the sixth of CLAUDE.md's seven questions — a check
+;; without having asked is the sixth of AGENTS.md's seven questions — a check
 ;; that could not run must not return the value of a check that ran and
 ;; passed — so `:server` has three states here, not two: answering, refused,
 ;; and not measured.
