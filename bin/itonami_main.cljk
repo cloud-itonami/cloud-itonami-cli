@@ -564,6 +564,11 @@
   (let [req (try (commands/alias-request command flags effect-opts)
                  (catch :default e
                    (refuse! (ex-message e) (ex-data e))))
+        override (when-let [j (:json-body flags)]
+                   (try (js->clj (js/JSON.parse j) :keywordize-keys true)
+                        (catch :default _
+                          (refuse! "--json-body には JSON 文字列を渡してください" {}))))
+        req (if override (update req :body #(merge % override)) req)
         token (require-token!)]
     (-> (request! req token)
         (.then (fn [{:keys [status body] :as response}]
