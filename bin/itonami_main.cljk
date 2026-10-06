@@ -420,7 +420,9 @@
   every `require-human-session!` route, and there is nothing an agent token can
   do that a Passkey session cannot."
   []
-  (or (human-token) (agent-token)))
+  (if (= "agent" (aget js/process.env "CLOUD_ITONAMI_AUTH_KIND"))
+    (agent-token)
+    (or (human-token) (agent-token))))
 
 (defn- server-origin
   "What `same-origin?` on the server compares an Origin header against.
@@ -548,6 +550,7 @@
 
 (defn- read-enrollment-key []
   (or (some-> (aget js/process.env "CLOUD_ITONAMI_ENROLLMENT_KEY") str/trim not-empty)
+      (some-> (slurp-file (path/resolve (data-dir) "agent-enrollment.key")) str/trim not-empty)
       (some-> (slurp-file (path/resolve (data-dir) "enrollment-key")) str/trim not-empty)
       (cannot-answer!
        (str "enrollment key が読めません。CLOUD_ITONAMI_ENROLLMENT_KEY を設定するか "
@@ -569,7 +572,7 @@
                         (catch :default _
                           (refuse! "--json-body には JSON 文字列を渡してください" {}))))
         req (if override (update req :body #(merge % override)) req)
-        token (require-token!)]
+        token (if (:stores-token? command) (session-token) (require-token!))]
     (-> (request! req token)
         (.then (fn [{:keys [status body] :as response}]
                  (if (and (:stores-token? command) (<= 200 status 299))
