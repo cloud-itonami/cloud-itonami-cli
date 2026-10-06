@@ -11,33 +11,44 @@
             (fn []
               (assert (= "Bearer wire-test-only" (aget (.-headers req) "authorization")))
               (swap! observed conj (js->clj (js/JSON.parse (.toString (js/Buffer.concat (clj->js @chunks)))) :keywordize-keys true))
-              (.writeHead res 202 #js {"Content-Type" "application/json"})
-              (.end res "{\"run_id\":\"wire-test-only\",\"status\":\"started\"}")))))))
+              (if (contains? (last @observed) :enrollment-key)
+                (do (.writeHead res 403 #js {"Content-Type" "application/json"})
+                    (.end res "{\"error\":{\"type\":\"wire-test-refusal\"}}"))
+                (do (.writeHead res 202 #js {"Content-Type" "application/json"})
+                    (.end res "{\"run_id\":\"wire-test-only\",\"status\":\"started\"}")))))))))
 (defn invoke! [port extra]
   (js/Promise.
    (fn [resolve reject]
      (let [env (js/Object.assign #js {} js/process.env)
            _ (js-delete env "NBB_CLJK_ROOTS")
+           _ (js-delete env "CLOUD_ITONAMI_ENROLLMENT_KEY")
            _ (aset env "CLOUD_ITONAMI_API_URL" (str "http://127.0.0.1:" port))
-           _ (aset env "CLOUD_ITONAMI_HUMAN_SESSION" "wire-test-only")
+           _ (aset env "CLOUD_ITONAMI_HUMAN_SESSION" "unused-human-test-token")
+           _ (aset env "CLOUD_ITONAMI_MCP_SESSION" "wire-test-only")
+           _ (aset env "CLOUD_ITONAMI_AUTH_KIND" "agent")
            _ (aset env "CLOUD_ITONAMI_DATA_DIR" "/private/tmp/itonami-cli-alias-wire-test")
            child (cp/spawn (path/resolve "bin/itonami")
-                          (clj->js (into ["itonami" "run" "--profile" "wire-test" "--input" "check" "--json"] extra))
+                          (clj->js (if (= :auth extra) ["auth" "login" "--json"]
+                                    (into ["itonami" "run" "--profile" "wire-test" "--input" "check" "--json"] extra)))
                           #js {:env env :stdio #js ["ignore" "pipe" "pipe"]})
            errors (atom "")]
        (.on (.-stderr child) "data" #(swap! errors str %))
        (.on child "error" reject)
-       (.on child "exit" #(if (= 0 %) (resolve true) (reject (js/Error. @errors))))))))
+       (.on child "exit" #(if (= (if (= :auth extra) 1 0) %) (resolve true) (reject (js/Error. @errors))))))))
+(fs/mkdirSync "/private/tmp/itonami-cli-alias-wire-test" #js {:recursive true :mode 448})
+(fs/writeFileSync "/private/tmp/itonami-cli-alias-wire-test/agent-enrollment.key" "wire-enrollment-key" #js {:mode 384})
 (.listen server 0 "127.0.0.1"
          (fn []
            (let [port (.-port (.address server))]
              (-> (invoke! port ["--json-body" "{\"response_mode\":\"text-only\"}"])
                  (.then #(invoke! port []))
+                 (.then #(invoke! port :auth))
                  (.then (fn [_]
                           (assert (= "check" (:input (first @observed))))
                           (assert (= "text-only" (:response_mode (first @observed))))
                           (assert (= "check" (:input (second @observed))))
                           (assert (not (contains? (second @observed) :response_mode)))
-                          (println "CLI alias wire test passed: override reaches HTTP; ordinary body preserved")
+                          (assert (= "wire-enrollment-key" (:enrollment-key (nth @observed 2))))
+                          (println "CLI wire test passed: body override, agent identity and native enrollment key")
                           (.close server)))
                  (.catch (fn [e] (println (.-message e)) (.close server) (set! (.-exitCode js/process) 1)))))))
