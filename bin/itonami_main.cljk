@@ -1994,7 +1994,8 @@
         accent #(text/paint (colour?) splash/accent-code %)
         dim #(text/paint (colour?) splash/dim-code %)]
     (-> (request! {:method :post :path "/api/auth/itonami/start"
-                   :body {:handoff true} :timeout-seconds 20}
+                   :body {:handoff true} :timeout-seconds 20
+                   :headers {"origin" (server-origin)}}
                   (agent-token))
         (.then
          (fn [{:keys [status body]}]
