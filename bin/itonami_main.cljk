@@ -528,7 +528,7 @@
                    (do (err (pr-str out))
                        (cannot-answer!
                         (str "server が応答しません: " (base-url) "\n"
-                             "  常駐は launchd (dev.cloud-itonami.app)。"
+                             "  常駐は launchd (cloud.itonami.app.local)。"
                              "この front end は server を起動しません。")
                         {:type :client/resident-absent}))))))))
 
@@ -1540,7 +1540,7 @@
                                     (str "· server: answering · store: "
                                          (or (get-in h [:health :store]) "?"))))
              (warn (str "! server が応答しません: " (base-url)
-                        " — 常駐: launchctl kickstart -k gui/$(id -u)/dev.cloud-itonami.app")))
+                        " — 常駐: launchctl kickstart -k gui/$(id -u)/cloud.itonami.app.local")))
            (when-not (session-token)
              (warn "! agent session がありません — itonami auth login"))
            ;; A project command that was NOT registered has to say so here. A
@@ -2464,7 +2464,7 @@
       (contains? #{["up"] ["down"]} named)
       (cannot-answer!
        (str "この front end は server を起動・停止しません。\n"
-            "  常駐: launchctl kickstart -k gui/$(id -u)/dev.cloud-itonami.app")
+            "  常駐: launchctl kickstart -k gui/$(id -u)/cloud.itonami.app.local")
        {:type :client/not-a-supervisor :command (first named)})
 
       :else
